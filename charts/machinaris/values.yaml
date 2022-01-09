@@ -1,0 +1,59 @@
+imagePullPolicy: Always
+
+env:
+  - name: TZ
+    value: UTC
+  - name: mode
+    value: fullnode
+
+ingress:
+  enabled: true
+  labels: {}
+  annotations:
+    cert-manager.io/cluster-issuer: "vault-issuer"
+    traefik.ingress.kubernetes.io/router.tls: 'true'
+  tls:
+    enabled: truemnemonic
+  host: "machinaris.dc"
+  
+machinaris:
+  controller: chia
+  service:
+    type: ClusterIP
+    httpPort: 8926
+    controllerPort: 8927 
+
+mnemonic: "gasp child sight fortune elegant game park net alcohol immune utility curve raccoon teach gift penalty clump wheel bicycle erode bind achieve group bid"
+
+persistence:
+  config:
+    size: "50Gi"
+    storageClass: "local-path"
+    accessMode: "ReadWriteOnce"
+  plots:
+    type: hostPath
+    path: /chia/plots
+    mountPath: /plots
+  temp:
+    type: hostPath
+    path: /chia/temp
+    mountPath: /plotting
+
+worker:
+  - name: chia
+    enabled: true
+    image: ghcr.io/guydavis/machinaris:v0.6.8
+    service:
+      port: 8927
+
+  - name: hddcoin
+    enabled: true
+    image: ghcr.io/guydavis/machinaris-hddcoin:v0.6.8
+    service:
+      port: 8930
+
+  - name: chives
+    image: ghcr.io/guydavis/machinaris-chives:v0.6.8
+    enabled: true
+    service:
+      port: 8931

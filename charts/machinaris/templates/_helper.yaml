@@ -1,0 +1,11 @@
+{{- define "common.fullname" -}}
+{{- .Chart.Name }}-{{ .Release.Name }}
+{{- end }}
+
+{{- define "service.controller" -}}
+{{- include "common.fullname" . }}-controller
+{{- end }}
+
+{{- define "service.http" -}}
+{{- include "common.fullname" . }}-http
+{{- end }}
