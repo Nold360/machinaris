@@ -34,6 +34,9 @@ spec:
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       containers:
+        {{- if $.Values.metrics.enabled }}
+          {{- include "sidecar.exporter" .name | nindent 8 }}
+        {{- end }}
         - name: {{ include "common.fullname" $ }}-{{ .name }}
           image: {{ .image }}
           imagePullPolicy: {{ $.Values.imagePullPolicy | default "Always" }}
@@ -64,10 +67,6 @@ spec:
             - name: plots_dir
               value: {{ $volumes.plots.mountPath }}
             {{- toYaml $.Values.env | default list | nindent 12 }}
-          ports:
-            - name: api
-              containerPort: {{ .service.port }}
-              protocol: TCP
           volumeMounts:
             - name: config
               mountPath: /root/.chia
@@ -117,12 +116,12 @@ spec:
             claimName: {{ include "common.fullname" $ }}-{{ .name }}
         {{- if $volumes.plots }}
         - name: plots
-          hostPath: 
+          hostPath:
             path: {{ $volumes.plots.path }}
         {{- end }}
         {{- if $volumes.temp }}
         - name: plotting
-          hostPath: 
+          hostPath:
             path: {{ $volumes.temp.path }}
         {{- end }}
         {{- if $.Values.mnemonic }}
@@ -149,6 +148,27 @@ spec:
   selector:
     app.kubernetes.io/name: {{ include "common.fullname" $ }}-{{ .name }}
     app.kubernetes.io/instance: {{ .name }}
+{{- if $.Values.metrics.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "common.fullname" $ }}-{{ .name }}-metrics
+  {{- with $.Values.metrics.serviceAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4}}
+  {{- end }}
+spec:
+  type: {{ $.Values.metrics.serviceType | default "ClusterIP" }}
+  ports:
+  - port: {{ $.Values.metrics.servicePort | default 9133 }}
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  selector:
+    app.kubernetes.io/name: {{ include "common.fullname" $ }}-{{ .name }}
+    app.kubernetes.io/instance: {{ .name }}
+{{- end }}
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -161,37 +181,4 @@ spec:
     requests:
       storage: {{ $.Values.persistence.config.size | quote }}
   storageClassName: {{ $.Values.persistence.config.storageClass | quote }}
-
-{{- if eq $.Values.machinaris.controller .name }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "service.controller" $ }}
-spec:
-  type: {{ $.Values.machinaris.service.type | default "ClusterIP" }}
-  ports:
-  - port: {{ $.Values.machinaris.service.controllerPort | default 8927 }}
-    targetPort: api
-    protocol: TCP
-    name: api
-  selector:
-    app.kubernetes.io/name: {{ include "common.fullname" $ }}-{{ .name }}
-    app.kubernetes.io/instance: {{ .name }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "service.http" $ }}
-spec:
-  type: {{ $.Values.machinaris.service.type | default "ClusterIP" }}
-  ports:
-  - port: {{ $.Values.machinaris.service.httpPort | default 8926 }}
-    targetPort: http
-    protocol: TCP
-    name: http
-  selector:
-    app.kubernetes.io/name: {{ include "common.fullname" $ }}-{{ .name }}
-    app.kubernetes.io/instance: {{ .name }}
-{{- end }}
 {{- end }}

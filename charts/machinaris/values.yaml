@@ -15,13 +15,24 @@ ingress:
   tls:
     enabled: truemnemonic
   host: "machinaris.dc"
-  
+
+# Enabled chia_fork_exporter sidecar
+metrics:
+  enabled: true
+  image: nold360/chia-fork-exporter
+  serviceAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '9133'
+  servicePort: 9133
+  serviceType: ClusterIP
+
 machinaris:
+  # Metrics exporter sidecar
   controller: chia
   service:
     type: ClusterIP
     httpPort: 8926
-    controllerPort: 8927 
+    controllerPort: 8927
 
 mnemonic: "gasp child sight fortune elegant game park net alcohol immune utility curve raccoon teach gift penalty clump wheel bicycle erode bind achieve group bid"
 

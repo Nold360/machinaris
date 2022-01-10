@@ -9,3 +9,25 @@
 {{- define "service.http" -}}
 {{- include "common.fullname" . }}-http
 {{- end }}
+
+{{- define "sidecar.exporter" -}}
+{{- $certPath := "/root/.chia" }}
+{{- if ne "chia" . }}
+  {{- $certPath = (printf "/root/.chia/%s" . ) -}}
+{{- end }}
+- name: metrics-exporter
+  image: {{ default "nold360/chia-fork-exporter:latest" }}
+  args:
+    - -fork
+    - {{ . }}
+    - -cert
+    - {{ $certPath }}/mainnet/config/ssl/full_node/private_full_node.crt
+    - -key
+    - {{ $certPath }}/mainnet/config/ssl/full_node/private_full_node.key
+  volumeMounts:
+  - name: config
+    mountPath: /root/.chia
+  ports:
+  - name: metrics
+    containerPort: 9133
+{{- end }}
