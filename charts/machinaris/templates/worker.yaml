@@ -1,9 +1,9 @@
-{{- range $.Values.worker }}
+{{- range $.Values.worker.forks }}
 ---
-{{- $volumes := $.Values.persistence }}
+{{- $volumes := $.Values.worker.persistence }}
 {{- if .persistence }}
-  {{- $volumes := .persistence }}
-  {{- $_ := deepCopy $.Values.persistence | merge $volumes }}
+  {{- $volumes = .persistence }}
+  {{- $_ := deepCopy $.Values.worker.persistence | merge $volumes }}
 {{- end }}
 ---
 apiVersion: apps/v1
@@ -34,8 +34,26 @@ spec:
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       containers:
-        {{- if $.Values.metrics.enabled }}
-          {{- include "sidecar.exporter" .name | nindent 8 }}
+        {{- if $.Values.worker.metrics.enabled }}
+          {{- $certPath := "/root/.chia" }}
+          {{- if ne "chia" .name }}
+            {{- $certPath = (printf "/root/.chia/%s" .name ) -}}
+          {{- end }}
+        - name: metrics-exporter
+          image: {{ $.Values.worker.metrics.image | default "nold360/chia-fork-exporter:latest" }}
+          args:
+            - -fork
+            - {{ .name }}
+            - -cert
+            - {{ $certPath }}/mainnet/config/ssl/full_node/private_full_node.crt
+            - -key
+            - {{ $certPath }}/mainnet/config/ssl/full_node/private_full_node.key
+          volumeMounts:
+          - name: config
+            mountPath: /root/.chia
+          ports:
+          - name: metrics
+            containerPort: 9133
         {{- end }}
         - name: {{ include "common.fullname" $ }}-{{ .name }}
           image: {{ .image }}
@@ -65,18 +83,16 @@ spec:
             - name: worker_api_port
               value: {{ .service.port | quote }}
             - name: plots_dir
-              value: {{ $volumes.plots.mountPath }}
+              value: {{ include "env.plotdir" $volumes.plots }}
             {{- toYaml $.Values.env | default list | nindent 12 }}
           volumeMounts:
             - name: config
               mountPath: /root/.chia
           {{- if $volumes.plots }}
-            - name: plots
-              mountPath: {{ $volumes.plots.mountPath }}
+            {{- include "volumes.mount" $volumes.plots | nindent 12 }}
           {{- end }}
           {{- if $volumes.temp }}
-            - name: plotting
-              mountPath: {{ $volumes.temp.mountPath }}
+            {{- include "volumes.mount" $volumes.temp | nindent 12 }}
           {{- end }}
           {{- if $.Values.mnemonic }}
             - name: mnemonic
@@ -115,14 +131,10 @@ spec:
           persistentVolumeClaim:
             claimName: {{ include "common.fullname" $ }}-{{ .name }}
         {{- if $volumes.plots }}
-        - name: plots
-          hostPath:
-            path: {{ $volumes.plots.path }}
+          {{- include "volumes.volumes" $volumes.plots | nindent 8 }}
         {{- end }}
         {{- if $volumes.temp }}
-        - name: plotting
-          hostPath:
-            path: {{ $volumes.temp.path }}
+          {{- include "volumes.volumes" $volumes.temp | nindent 8 }}
         {{- end }}
         {{- if $.Values.mnemonic }}
         - name: mnemonic
@@ -148,20 +160,20 @@ spec:
   selector:
     app.kubernetes.io/name: {{ include "common.fullname" $ }}-{{ .name }}
     app.kubernetes.io/instance: {{ .name }}
-{{- if $.Values.metrics.enabled }}
+{{- if $.Values.worker.metrics.enabled }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "common.fullname" $ }}-{{ .name }}-metrics
-  {{- with $.Values.metrics.serviceAnnotations }}
+  {{- with $.Values.worker.metrics.serviceAnnotations }}
   annotations:
     {{- toYaml . | nindent 4}}
   {{- end }}
 spec:
-  type: {{ $.Values.metrics.serviceType | default "ClusterIP" }}
+  type: {{ $.Values.worker.metrics.serviceType | default "ClusterIP" }}
   ports:
-  - port: {{ $.Values.metrics.servicePort | default 9133 }}
+  - port: {{ $.Values.worker.metrics.servicePort | default 9133 }}
     targetPort: metrics
     protocol: TCP
     name: metrics
@@ -176,9 +188,9 @@ metadata:
   name: {{ include "common.fullname" $ }}-{{ .name }}
 spec:
   accessModes:
-    - {{ $.Values.persistence.config.accessMode }}
+    - {{ $.Values.worker.persistence.config.accessMode }}
   resources:
     requests:
-      storage: {{ $.Values.persistence.config.size | quote }}
-  storageClassName: {{ $.Values.persistence.config.storageClass | quote }}
+      storage: {{ $.Values.worker.persistence.config.size | quote }}
+  storageClassName: {{ $.Values.worker.persistence.config.storageClass | quote }}
 {{- end }}

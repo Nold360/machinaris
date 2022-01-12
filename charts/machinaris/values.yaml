@@ -1,11 +1,17 @@
-imagePullPolicy: Always
 
+
+# Secret mnemonic that will be used to generate your wallet
+# Keep this save & don't share it with anyone:
+mnemonic: "gasp child sight fortune elegant game park net alcohol immune utility curve raccoon teach gift penalty clump wheel bicycle erode bind achieve group bid"
+
+# Global environment for every pod
 env:
   - name: TZ
     value: UTC
   - name: mode
     value: fullnode
 
+# Ingress controller for machinaris web ui
 ingress:
   enabled: true
   labels: {}
@@ -13,44 +19,70 @@ ingress:
     cert-manager.io/cluster-issuer: "vault-issuer"
     traefik.ingress.kubernetes.io/router.tls: 'true'
   tls:
-    enabled: truemnemonic
+    enabled: true
   host: "machinaris.dc"
 
-# Enabled chia_fork_exporter sidecar
-metrics:
-  enabled: true
-  image: nold360/chia-fork-exporter
-  serviceAnnotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/port: '9133'
-  servicePort: 9133
-  serviceType: ClusterIP
+imagePullPolicy: Always
 
+# Machinaris controller configuration
 machinaris:
-  # Metrics exporter sidecar
+
+  # IMPORTANT: Choose which worker will become controller:
   controller: chia
+
+  # HTTP/API Service
   service:
     type: ClusterIP
     httpPort: 8926
     controllerPort: 8927
 
-mnemonic: "gasp child sight fortune elegant game park net alcohol immune utility curve raccoon teach gift penalty clump wheel bicycle erode bind achieve group bid"
+  # Export plotman metrics
+  apiServiceAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8926'
+    prometheus.io/path: '/metrics/plotman'
 
-persistence:
-  config:
-    size: "50Gi"
-    storageClass: "local-path"
-    accessMode: "ReadWriteOnce"
-  plots:
-    type: hostPath
-    path: /chia/plots
-    mountPath: /plots
-  temp:
-    type: hostPath
-    path: /chia/temp
-    mountPath: /plotting
-
+# Global worker configuration
 worker:
+  persistence:
+    # One Config PVC per fork, incl. the blockchain & configs
+    config:
+      size: "50Gi"
+      storageClass: "local-path"
+      accessMode: "ReadWriteOnce"
+
+    # Plots & Temp are only supported as hostPath for now
+    # Every "path" is a mountpoint on the host system
+    # Every "path" will be mounted under "mountPath" inside the pod & added to env[plot_dir]
+    plots:
+      - mountPath: /plots
+        hostPaths:
+          - /chia/farm/0
+          - /chia/farm/1
+          - /chia/farm/2
+          - /chia/farm/3
+          - /chia/farm/4
+          - /chia/farm/5
+          - /chia/farm/6
+          - /chia/farm/zfs
+    temp:
+      - mountPath: /plotting
+        hostPaths:
+          - /chia/temp
+
+  # Enables prometheus metrics exporter sidecar container for every fork
+  metrics:
+    enabled: true
+    image: nold360/chia-fork-exporter
+    serviceAnnotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/port: '9133'
+    servicePort: 9133
+    serviceType: ClusterIP
+
+  # List of all chia forks
+  # Set "enabled: true" if you want to use it
+  forks:
   - name: chia
     enabled: true
     image: ghcr.io/guydavis/machinaris:v0.6.8
