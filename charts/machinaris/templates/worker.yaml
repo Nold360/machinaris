@@ -1,4 +1,5 @@
 {{- range $.Values.worker.forks }}
+  {{- if .enabled }}
   {{- $volumes := $.Values.worker.persistence }}
   {{- if .persistence }}
     {{- $volumes = .persistence }}
@@ -34,7 +35,7 @@ spec:
       containers:
         {{- if $.Values.worker.metrics.enabled }}
           {{- $certPath := "/root/.chia" }}
-          {{- if ne "chia" .name }}
+          {{- if and (ne "chia" .name) (ne "nchain" .name) }}
             {{- $certPath = (printf "/root/.chia/%s" .name ) -}}
           {{- end }}
         - name: metrics-exporter
@@ -63,6 +64,10 @@ spec:
                   - /bin/sh
                   - -c
                   - cp /mnemonic/mnemonic.txt /root/.chia/mnemonic.txt
+          {{- if or $.Values.worker.resources .resources}}
+          resources:
+            {{- .resources | default $.Values.worker.resources | toYaml | nindent 12 }}
+          {{- end }}
           env:
             - name: blockchains
               value: {{ .blockchains | default .name }}
@@ -194,4 +199,5 @@ spec:
     requests:
       storage: {{ $.Values.worker.persistence.config.size | quote }}
   storageClassName: {{ $.Values.worker.persistence.config.storageClass | quote }}
+  {{- end }}
 {{- end }}

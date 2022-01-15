@@ -86,6 +86,14 @@ worker:
     servicePort: 9133
     serviceType: ClusterIP
 
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+
   # List of all chia forks
   # Set "enabled: true" if you want to use it
   forks:
@@ -95,6 +103,10 @@ worker:
     image: ghcr.io/guydavis/machinaris:v0.6.8
     ports:
       api: 8927
+    resources:
+      limits:
+        memory: "8Gi"
+        cpu: "4000m"
 
   - name: hddcoin
     enabled: true
@@ -111,11 +123,15 @@ worker:
       api: 8928
 
   - name: chives
+    enabled: true
     image: ghcr.io/guydavis/machinaris-chives:v0.6.8
     mode: fullnode
-    enabled: true
     ports:
       api: 8931
+    resources:
+      limits:
+        memory: "8Gi"
+        cpu: "4000m"
     persistence:
       plots:
         - mountPath: /plots
@@ -134,15 +150,65 @@ worker:
             - /chia/temp
 
   - name: silicoin
-    image: ghcr.io/guydavis/machinaris-silicoin:v0.6.8
-    mode: fullnode
     enabled: true
+    image: nold360/machinaris-silicoin:latest
+    mode: fullnode
     ports:
       api: 8934
 
   - name: staicoin
+    enabled: true
     image: ghcr.io/guydavis/machinaris-staicoin:v0.6.8
     mode: fullnode
-    enabled: true
     ports:
       api: 8934
+
+  - name: btcgreen
+    enabled: false
+    image: ghcr.io/guydavis/machinaris-btcgreen:v0.6.8
+    mode: fullnode
+    ports:
+      api: 8938
+
+  - name: maize
+    enabled: true
+    image: ghcr.io/guydavis/machinaris-maize:v0.6.8
+    mode: fullnode
+    ports:
+      api: 8933
+
+  - name: nchain
+    enabled: true
+    image: ghcr.io/guydavis/machinaris-nchain:v0.6.8
+    mode: fullnode
+    ports:
+      api: 8929
+
+  - name: stor
+    enabled: true
+    image: ghcr.io/guydavis/machinaris-stor:v0.6.8
+    mode: fullnode
+    ports:
+      api: 8935
+
+  - name: shibgreen
+    enabled: false
+    image: ghcr.io/guydavis/machinaris-shibgreen:v0.6.8
+    mode: fullnode
+    ports:
+      api: 8939
+
+  - name: flora
+    enabled: false
+    image: ghcr.io/guydavis/machinaris-flora:v0.6.8
+    mode: fullnode
+    ports:
+      api: 8932
+
+  - name: cryptodoge
+    enabled: false
+    image: ghcr.io/guydavis/machinaris-cryptodoge:v0.6.8
+    mode: fullnode
+    ports:
+      api: 8937
+
