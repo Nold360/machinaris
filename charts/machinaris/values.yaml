@@ -70,6 +70,7 @@ worker:
           - /chia/farm/4
           - /chia/farm/5
           - /chia/farm/6
+          - /chia/farm/7
           - /chia/farm/zfs
     temp:
       - mountPath: /plotting
@@ -99,39 +100,45 @@ worker:
   forks:
   - name: chia
     enabled: true
+    plotter: true
     mode: fullnode
-    image: ghcr.io/guydavis/machinaris:v0.6.8
+    #image: ghcr.io/guydavis/machinaris:v0.6.8
+    image: nold360/machinaris-chia:latest
     ports:
       api: 8927
     resources:
       limits:
-        memory: "8Gi"
-        cpu: "4000m"
+        memory: "16Gi"
+        cpu: "6000m"
 
   - name: hddcoin
     enabled: true
     mode: fullnode
-    image: ghcr.io/guydavis/machinaris-hddcoin:v0.6.8
+    #image: ghcr.io/guydavis/machinaris-hddcoin:v0.6.8
+    image: nold360/machinaris-hddcoin:latest
     ports:
       api: 8930
 
   - name: flax
     enabled: true
     mode: fullnode
-    image: ghcr.io/guydavis/machinaris-flax:v0.6.8
+    #image: ghcr.io/guydavis/machinaris-flax:v0.6.8
+    image: nold360/machinaris-flax:latest
     ports:
       api: 8928
 
   - name: chives
     enabled: true
-    image: ghcr.io/guydavis/machinaris-chives:v0.6.8
+    plotter: true
+    #image: ghcr.io/guydavis/machinaris-chives:v0.6.8
+    image: nold360/machinaris-chives:latest
     mode: fullnode
     ports:
       api: 8931
     resources:
       limits:
-        memory: "8Gi"
-        cpu: "4000m"
+        memory: "16Gi"
+        cpu: "6000m"
     persistence:
       plots:
         - mountPath: /plots
@@ -143,6 +150,7 @@ worker:
             - /chia/farm/4/chives
             - /chia/farm/5/chives
             - /chia/farm/6/chives
+            - /chia/farm/7/chives
             - /chia/farm/zfs/chives
       temp:
         - mountPath: /plotting
@@ -158,57 +166,72 @@ worker:
 
   - name: staicoin
     enabled: true
-    image: ghcr.io/guydavis/machinaris-staicoin:v0.6.8
+    #image: ghcr.io/guydavis/machinaris-staicoin:v0.6.8
+    image: nold360/machinaris-staicoin:latest
     mode: fullnode
     ports:
       api: 8934
 
   - name: btcgreen
     enabled: false
-    image: ghcr.io/guydavis/machinaris-btcgreen:v0.6.8
+    #image: ghcr.io/guydavis/machinaris-btcgreen:v0.6.8
+    image: nold360/machinaris-btcgreen:latest
     mode: fullnode
     ports:
       api: 8938
 
   - name: maize
     enabled: true
-    image: ghcr.io/guydavis/machinaris-maize:v0.6.8
+    #image: ghcr.io/guydavis/machinaris-maize:v0.6.8
+    image: nold360/machinaris-maize:latest
     mode: fullnode
     ports:
       api: 8933
 
   - name: nchain
     enabled: true
-    image: ghcr.io/guydavis/machinaris-nchain:v0.6.8
+    #image: ghcr.io/guydavis/machinaris-nchain:v0.6.8
+    image: nold360/machinaris-nchain:latest
     mode: fullnode
     ports:
       api: 8929
 
   - name: stor
     enabled: true
-    image: ghcr.io/guydavis/machinaris-stor:v0.6.8
+    #image: ghcr.io/guydavis/machinaris-stor:v0.6.8
+    image: nold360/machinaris-storcoin:latest
     mode: fullnode
     ports:
       api: 8935
 
   - name: shibgreen
     enabled: false
-    image: ghcr.io/guydavis/machinaris-shibgreen:v0.6.8
+    #image: ghcr.io/guydavis/machinaris-shibgreen:v0.6.8
+    image: nold360/machinaris-shibgreen:latest
     mode: fullnode
     ports:
       api: 8939
 
   - name: flora
     enabled: false
-    image: ghcr.io/guydavis/machinaris-flora:v0.6.8
+    #image: ghcr.io/guydavis/machinaris-flora:v0.6.8
+    image: nold360/machinaris-flora:latest
     mode: fullnode
     ports:
       api: 8932
 
   - name: cryptodoge
     enabled: false
-    image: ghcr.io/guydavis/machinaris-cryptodoge:v0.6.8
+    #image: ghcr.io/guydavis/machinaris-cryptodoge:v0.6.8
+    image: nold360/machinaris-cryptodoge:latest
     mode: fullnode
     ports:
       api: 8937
 
+  - name: mmx
+    enabled: false
+    image: ghcr.io/guydavis/machinaris-mmx:test
+    mode: fullnode
+    ports:
+      api: 8940
+      node: 12333

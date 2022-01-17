@@ -66,7 +66,7 @@ spec:
                   - cp /mnemonic/mnemonic.txt /root/.chia/mnemonic.txt
           {{- if or $.Values.worker.resources .resources}}
           resources:
-            {{- .resources | default $.Values.worker.resources | toYaml | nindent 12 }}
+            {{-  $.Values.worker.resources | merge (.resources | default dict) | toYaml | nindent 12 }}
           {{- end }}
           env:
             - name: blockchains
@@ -91,6 +91,12 @@ spec:
               value: {{ include "env.plotdir" $volumes.plots }}
             {{- if $.Values.env }}
               {{- toYaml $.Values.env | nindent 12 }}
+            {{- end }}
+            {{- if not .plotter | default false }}
+            - name: bladebit_skip_build
+              value: "true"
+            - name: madmax_skip_build
+              value: "true"
             {{- end }}
           volumeMounts:
             - name: config
